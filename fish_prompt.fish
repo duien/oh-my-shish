@@ -25,6 +25,7 @@ set grayscale 1d2021 282828 32302f 3c3836 504945 665c54 7c6f64 928374 a89984 bda
 
 set bg_normal $grayscale[2]
 
+# TODO Return status of last command
 function fish_prompt
   set -l segments (math $COLUMNS/25)
 
@@ -64,7 +65,6 @@ function fish_prompt
       set bg_branch $grayscale[-1]
       set fg_branch $purple[3]
     end
-    # set ref (echo $ref | sed  "s#refs/heads/#$powerline_branch #")
     set ref (echo $ref | sed  "s#refs/heads/##")
     if [ "master" = $ref ]
       set fg_branch $purple[3]
@@ -74,41 +74,22 @@ function fish_prompt
     if test $outside_length -gt 0
       _shish_cprintf $grayscale[4] $grayscale[6] ' '
       _shish_list $outside_length " $powerline_right_soft " $grayscale[4] $grayscale[7] $grayscale[5] $path_bits[1..-2]
-      # _shish_transition $grayscale[4] $status_colors[3] $powerline_right true
       _shish_transition $grayscale[4] $bg_branch $powerline_left
     else
       _shish_cprintf $bg_branch $status_colors[1] ' '
     end
 
     # git branch / status
-    # _shish_transition $grayscale[4] $grayscale[1] $powerline_left
-    # TODO The branch gets its own coloring
-    #   - highlight if you're on master
-    #   - fade out the "name" in "name/topic" branch
-    #   - color based on ahead/behind
-    #
     set -l branch_segments (_shish_segments $ref)
     if [ (count $branch_segments) -gt 1 ]
       _shish_list (count $branch_segments) '/' $bg_branch $purple[3] $purple[3] $branch_segments[1..-2]
       _shish_cprintf $bg_branch $purple[3] '/'
     end
     _shish_cprintf $bg_branch $fg_branch $branch_segments[-1]
-    # _shish_cprintf $bg_branch $purple[3] emily/
-    # _shish_cprintf $bg_branch $purple[1] feature
-
-    # set -l ahead (_shish_git ahead)
-    # switch $ahead
-    #   case '+' ; _shish_cprintf $bg_branch $green[2] " $ahead"
-    #   case '-' ; _shish_cprintf $bg_branch $yellow[2] " $ahead"
-    #   case '±' ; _shish_cprintf $bg_branch $orange[2] " $ahead"
-    # end
-
-    # _shish_cprintf $grayscale[1] $status_colors[2] $ref
     _shish_transition $bg_branch $status_colors[3] $powerline_right true
 
     # the git root
     _shish_cbprintf $status_colors[3] $grayscale[-1] $path_bits[-1]
-    # _shish_cprintf $status_colors[3] $status_colors[2] ":branch"
 
     # and the dir inside git
     if test $inside_length -gt 0
@@ -118,14 +99,9 @@ function fish_prompt
     _shish_transition $status_colors[3] $bg_normal $powerline_right true
   else
     # not inside of git
-    # $grayscale[4] $grayscale[7] $grayscale[5]
 
     _shish_cprintf $grayscale[4] $grayscale[7] ' '
     _shish_pwd $segments " $powerline_right_soft " $grayscale[4] $grayscale[7] $grayscale[5] $grayscale[-1] (_shish_segments $PWD)
     _shish_transition $grayscale[4] $bg_normal $powerline_right true
-
-    # _shish_cprintf $purple[3] $purple[1] ' '
-    # _shish_pwd 4 " $powerline_right_soft " $purple[3] $purple[1] $purple[2] $grayscale[-1] (_shish_segments $PWD)
-    # _shish_transition $purple[3] $bg_normal $powerline_right true
   end
 end
