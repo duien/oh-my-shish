@@ -2,6 +2,7 @@ set powerline_right \uE0B0
 set powerline_right_soft \uE0B1
 set powerline_left \uE0B2
 set powerline_left_soft \uE0B3
+set powerline_branch \uE0A0
 
 #         red    green  yellow blue   purple cyan   orange
 # bright  f73028 b8bb26 fabd2f 83a598 d3869b 7db669 fe8019
@@ -25,6 +26,8 @@ set grayscale 1d2021 282828 32302f 3c3836 504945 665c54 7c6f64 928374 a89984 bda
 set bg_normal $grayscale[2]
 
 function fish_prompt
+  set -l segments (math $COLUMNS/25)
+
   set -l git_root (command git rev-parse --show-toplevel ^/dev/null)
   if [ "$git_root" ]
     set -l path_bits (_shish_segments $git_root)
@@ -33,10 +36,13 @@ function fish_prompt
     set -l inside_length
     if [ $dir_inside_git ]
       set inside_length (count $path_bits_inside)
+      if [ $inside_length -gt (math $segments-1) ]
+        set inside_length (math $segments-1)
+      end
     else
       set inside_length 0
     end
-    set -l outside_length (math 3-$inside_length)
+    set -l outside_length (math $segments-1-$inside_length)
 
     set -l dirty (_shish_git dirty)
     set -l staged (_shish_git staged)
@@ -53,13 +59,29 @@ function fish_prompt
     if test $outside_length -gt 0
       _shish_cprintf $grayscale[4] $grayscale[6] ' '
       _shish_list $outside_length " $powerline_right_soft " $grayscale[4] $grayscale[7] $grayscale[5] $path_bits[1..-2]
-      _shish_transition $grayscale[4] $status_colors[3] $powerline_right true
+      # _shish_transition $grayscale[4] $status_colors[3] $powerline_right true
+      _shish_transition $grayscale[4] $grayscale[1] $powerline_left
     else
-      _shish_cprintf $status_colors[3] $status_colors[1] ' '
+      _shish_cprintf $grayscale[1] $status_colors[1] ' '
     end
+
+    # git branch / status
+    # _shish_transition $grayscale[4] $grayscale[1] $powerline_left
+    set -l ref (command git symbolic-ref HEAD ^/dev/null)
+    if [ $status -gt 0 ]
+      set -l branch (command git show-ref --head -s --abbrev | head -n1 ^/dev/null)
+      set ref "^ $branch"
+    end
+    # set ref (echo $ref | sed  "s#refs/heads/#$powerline_branch #")
+    set ref (echo $ref | sed  "s#refs/heads/##")
+
+
+    _shish_cprintf $grayscale[1] $status_colors[2] $ref
+    _shish_transition $grayscale[1] $status_colors[3] $powerline_right true
 
     # the git root
     _shish_cbprintf $status_colors[3] $grayscale[-1] $path_bits[-1]
+    # _shish_cprintf $status_colors[3] $status_colors[2] ":branch"
 
     # and the dir inside git
     if test $inside_length -gt 0
@@ -72,7 +94,7 @@ function fish_prompt
     # $grayscale[4] $grayscale[7] $grayscale[5]
 
     _shish_cprintf $grayscale[4] $grayscale[7] ' '
-    _shish_pwd 4 " $powerline_right_soft " $grayscale[4] $grayscale[7] $grayscale[5] $grayscale[-1] (_shish_segments $PWD)
+    _shish_pwd $segments " $powerline_right_soft " $grayscale[4] $grayscale[7] $grayscale[5] $grayscale[-1] (_shish_segments $PWD)
     _shish_transition $grayscale[4] $bg_normal $powerline_right true
 
     # _shish_cprintf $purple[3] $purple[1] ' '
