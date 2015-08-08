@@ -52,7 +52,22 @@ function fish_prompt
     else if [ $staged ] ; set status_colors $yellow
     # else if [ $stashed ] ; set status_colors $yellow
     # else if [ $ahead ] ; set status_colors $green
-    else ; set status_colors $blue
+    else ; set status_colors $cyan
+    end
+
+    set -l ref (command git symbolic-ref HEAD ^/dev/null)
+    set -l fg_branch $purple[1]
+    set -l bg_branch $grayscale[1]
+    if [ $status -gt 0 ]
+      set -l branch (command git show-ref --head -s --abbrev | head -n1 ^/dev/null)
+      set ref $branch
+      set bg_branch $grayscale[-1]
+      set fg_branch $purple[3]
+    end
+    # set ref (echo $ref | sed  "s#refs/heads/#$powerline_branch #")
+    set ref (echo $ref | sed  "s#refs/heads/##")
+    if [ "master" = $ref ]
+      set fg_branch $purple[3]
     end
 
     # everything leading up to git root
@@ -60,24 +75,36 @@ function fish_prompt
       _shish_cprintf $grayscale[4] $grayscale[6] ' '
       _shish_list $outside_length " $powerline_right_soft " $grayscale[4] $grayscale[7] $grayscale[5] $path_bits[1..-2]
       # _shish_transition $grayscale[4] $status_colors[3] $powerline_right true
-      _shish_transition $grayscale[4] $grayscale[1] $powerline_left
+      _shish_transition $grayscale[4] $bg_branch $powerline_left
     else
-      _shish_cprintf $grayscale[1] $status_colors[1] ' '
+      _shish_cprintf $bg_branch $status_colors[1] ' '
     end
 
     # git branch / status
     # _shish_transition $grayscale[4] $grayscale[1] $powerline_left
-    set -l ref (command git symbolic-ref HEAD ^/dev/null)
-    if [ $status -gt 0 ]
-      set -l branch (command git show-ref --head -s --abbrev | head -n1 ^/dev/null)
-      set ref "^ $branch"
+    # TODO The branch gets its own coloring
+    #   - highlight if you're on master
+    #   - fade out the "name" in "name/topic" branch
+    #   - color based on ahead/behind
+    #
+    set -l branch_segments (_shish_segments $ref)
+    if [ (count $branch_segments) -gt 1 ]
+      _shish_list (count $branch_segments) '/' $bg_branch $purple[3] $purple[3] $branch_segments[1..-2]
+      _shish_cprintf $bg_branch $purple[3] '/'
     end
-    # set ref (echo $ref | sed  "s#refs/heads/#$powerline_branch #")
-    set ref (echo $ref | sed  "s#refs/heads/##")
+    _shish_cprintf $bg_branch $fg_branch $branch_segments[-1]
+    # _shish_cprintf $bg_branch $purple[3] emily/
+    # _shish_cprintf $bg_branch $purple[1] feature
 
+    # set -l ahead (_shish_git ahead)
+    # switch $ahead
+    #   case '+' ; _shish_cprintf $bg_branch $green[2] " $ahead"
+    #   case '-' ; _shish_cprintf $bg_branch $yellow[2] " $ahead"
+    #   case '±' ; _shish_cprintf $bg_branch $orange[2] " $ahead"
+    # end
 
-    _shish_cprintf $grayscale[1] $status_colors[2] $ref
-    _shish_transition $grayscale[1] $status_colors[3] $powerline_right true
+    # _shish_cprintf $grayscale[1] $status_colors[2] $ref
+    _shish_transition $bg_branch $status_colors[3] $powerline_right true
 
     # the git root
     _shish_cbprintf $status_colors[3] $grayscale[-1] $path_bits[-1]
