@@ -163,6 +163,11 @@ set shish_bg_pwd $grayscale[4]
 set shish_fg_pwd $grayscale[7]
 set shish_sp_pwd $grayscale[5]
 
+set shish_git_clean     $cyan
+set shish_git_untracked $blue
+set shish_git_staged    $orange
+set shish_git_dirty     $red
+
 function fish_prompt
   # set SHISH_DEBUG true
   set -l segments (math $COLUMNS/20)
@@ -208,8 +213,19 @@ function fish_prompt
     __shish_segment hard left $red[3]
     __shish_print_in black branch
 
+    # Determine git status color
+    # set -l dirty     (_shish_git dirty)
+    # set -l staged    (_shish_git staged)
+    # set -l untracked (_shish_git untracked)
+
+    set -l shish_status_color $shish_git_clean
+    if      [ (_shish_git dirty) ]     ; set shish_status_color $shish_git_dirty
+    else if [ (_shish_git staged) ]    ; set shish_status_color $shish_git_staged
+    else if [ (_shish_git untracked) ] ; set shish_status_color $shish_git_untracked
+    end
+
     # Print git root
-    __shish_segment hard right $green[3]
+    __shish_segment hard right $shish_status_color[3]
     __shish_print_in $grayscale[-1] $root
 
     # Print segments inside repo, if any
@@ -217,14 +233,14 @@ function fish_prompt
 
       # We have room for all the segments
       if [ $inside_length -ge $inside_count ]
-        __shish_segment soft right $green[2]
-        __shish_print_list_in $green[1] right $green[2] $inside
+        __shish_segment soft right $shish_status_color[2]
+        __shish_print_list_in $shish_status_color[1] right $shish_status_color[2] $inside
       else
         set inside_length (math $inside_length+1)
         [ $inside_length -eq 1 ] ; and set inside_length 2
         set -l visible_inside (_shish_limit_to $inside_length $inside)
-        __shish_print_in $green[2] ' ⋯  '
-        __shish_print_list_in $green[1] right $green[2] $visible_inside[2..-1]
+        __shish_print_in $shish_status_color[2] ' ⋯  '
+        __shish_print_list_in $shish_status_color[1] right $shish_status_color[2] $visible_inside[2..-1]
       end
     end
 
