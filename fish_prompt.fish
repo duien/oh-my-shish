@@ -92,16 +92,14 @@ function __shish_switch_bg -a color
   set __shish_bg_current $color
 end
 
-function __shish_print_list_in -a color direction sep_color -d "Print pretty list <color> <direction> <sep> <list>"
-  __shish_debug pl $argv
-  set -l list $argv[4..-1]
-  __shish_debug list $list
+function __shish_print_list_in -a color separator -d "Print pretty list <color> <separator> <list>"
+  set -l list $argv[3..-1]
   set -l length (count $list)
 
   if set -q list[2]
     for item in $list[1..-2]
       __shish_print_in $color $item
-      __shish_segment soft $direction $sep_color
+      __shish_print_in $color $separator
     end
   end
   __shish_print_in $color $list[-1]
@@ -151,7 +149,7 @@ function __shish_segment -a kind direction color -d "Generate segment <kind> <di
 end
 
 function _shish_pretty_pwd
-  echo _shish_pretty_dir $PWD
+  echo (_shish_pretty_dir $PWD)
 end
 
 function _shish_pretty_dir -a directory -d "Current directory, with home turned into `~` if applicable"
@@ -168,12 +166,21 @@ set shish_git_untracked $blue
 set shish_git_staged    $orange
 set shish_git_dirty     $red
 
+set shish_bg_branch $grayscale[1]
+set shish_fg_branch $purple[3]
+set shish_hl_branch $purple[1]
+
+set shish_bg_detached $grayscale[-1]
+set shish_fg_detached $purple[3]
+
 function fish_prompt
-  # set SHISH_DEBUG true
+  set -l last_status $status
+  echo " >> $history[1]"
   set -l segments (math $COLUMNS/20)
   set __shish_bg_current 'unstarted'
-  # echo -n "[seg|$segments]"
-  __shish_debug seg $segments
+
+  [ $last_status -ne 0 ] ; and __shish_print_in $orange[2] "╰→ $last_status"
+  echo
 
   # Are we in a git repository?
   set -l git_root (_shish_git root)
@@ -205,19 +212,31 @@ function fish_prompt
     # Print outside segments if we ended up with any
     if [ $outside_length -gt 0 ]
       __shish_segment hard right $shish_bg_pwd
-      __shish_print_list_in $shish_fg_pwd right $shish_sp_pwd \
+      __shish_print_list_in $shish_fg_pwd (__shish_segment soft right $shish_sp_pwd) \
           (_shish_limit_to $outside_length $outside)
     end
 
     # Print branch info
-    __shish_segment hard left $red[3]
-    __shish_print_in black branch
+    set -l branch (_shish_git branch)
+    if [ $branch ]
+      __shish_segment hard left $shish_bg_branch
+      if [ $branch = 'master' ]
+        __shish_print_in $shish_fg_branch $branch
+      else
+        set -l branch_bits (echo $branch | tr / \n)
+        if set -q branch_bits[2]
+          __shish_print_list_in $shish_fg_branch '/' $branch_bits[1..-2]
+          __shish_print_in $shish_fg_branch '/'
+        end
+        __shish_print_in $shish_hl_branch $branch_bits[-1]
+      end
+    else
+      __shish_segment hard left $shish_bg_detached
+      __shish_print_in $shish_fg_detached (_shish_git ref)
+    end
+
 
     # Determine git status color
-    # set -l dirty     (_shish_git dirty)
-    # set -l staged    (_shish_git staged)
-    # set -l untracked (_shish_git untracked)
-
     set -l shish_status_color $shish_git_clean
     if      [ (_shish_git dirty) ]     ; set shish_status_color $shish_git_dirty
     else if [ (_shish_git staged) ]    ; set shish_status_color $shish_git_staged
@@ -234,20 +253,20 @@ function fish_prompt
       # We have room for all the segments
       if [ $inside_length -ge $inside_count ]
         __shish_segment soft right $shish_status_color[2]
-        __shish_print_list_in $shish_status_color[1] right $shish_status_color[2] $inside
+        __shish_print_list_in $shish_status_color[1] (__shish_segment soft right $shish_status_color[2]) $inside
       else
         set inside_length (math $inside_length+1)
         [ $inside_length -eq 1 ] ; and set inside_length 2
         set -l visible_inside (_shish_limit_to $inside_length $inside)
         __shish_print_in $shish_status_color[2] ' ⋯  '
-        __shish_print_list_in $shish_status_color[1] right $shish_status_color[2] $visible_inside[2..-1]
+        __shish_print_list_in $shish_status_color[1] (__shish_segment soft right $shish_status_color[2]) $visible_inside[2..-1]
       end
     end
 
   else
     # Display prompt without git info
     __shish_segment hard right $shish_bg_pwd
-    __shish_print_list_in $shish_fg_pwd right $shish_sp_pwd \
+    __shish_print_list_in $shish_fg_pwd (__shish_segment soft right $shish_sp_pwd) \
       (_shish_limit_to $segments (_shish_pretty_pwd | tr / \n))
   end
   __shish_end

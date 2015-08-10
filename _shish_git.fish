@@ -1,8 +1,15 @@
 function _shish_git -a info
 
   switch $info
+    # info
     case root
       echo (command git rev-parse --show-toplevel ^/dev/null)
+    case branch
+      echo (command  git symbolic-ref HEAD ^/dev/null | sed  "s#refs/heads/##")
+    case ref
+      echo (command git show-ref --head -s --abbrev | head -n1 ^/dev/null)
+
+    # statuses
     case dirty
       echo (command git diff --no-ext-diff --quiet --exit-code; or echo -n '*')
     case staged
