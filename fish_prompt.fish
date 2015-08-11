@@ -173,6 +173,48 @@ set shish_hl_branch $purple[1]
 set shish_bg_detached $grayscale[-1]
 set shish_fg_detached $purple[3]
 
+# TODO Maybe set up all the syntax highlighting colors? o.O
+# The following variables are available to change the highlighting colors in fish:
+#
+# fish_color_normal, the default color
+# fish_color_command, the color for commands
+# fish_color_quote, the color for quoted blocks of text
+# fish_color_redirection, the color for IO redirections
+# fish_color_end, the color for process separators like ';' and '&'
+# fish_color_error, the color used to highlight potential errors
+# fish_color_param, the color for regular command parameters
+# fish_color_comment, the color used for code comments
+# fish_color_match, the color used to highlight matching parenthesis
+# fish_color_search_match, the color used to highlight history search matches
+# fish_color_operator, the color for parameter expansion operators like '*' and '~'
+# fish_color_escape, the color used to highlight character escapes like '\n' and '\x70'
+# fish_color_cwd, the color used for the current working directory in the default prompt
+#
+# Additionally, the following variables are available to change the highlighting in the completion pager:
+#
+# fish_pager_color_prefix, the color of the prefix string, i.e. the string that is to be completed
+# fish_pager_color_completion, the color of the completion itself
+# fish_pager_color_description, the color of the completion description
+# fish_pager_color_progress, the color of the progress bar at the bottom left corner
+# fish_pager_color_secondary, the background color of the every second completion
+
+# This would be the spot for a hook to run after a long-running command
+# although doing so before figuring out how to ignore interactive commands
+# would be annoying
+# function _test_postexec --on-event fish_postexec
+#   set -g __shish_last_command $argv
+#   echo "post[$argv] $status $_"
+# end
+
+# This is the best start I've been able to make on saving the previous
+# foreground job before current. This would let us check for a known
+# list of interactive things, but that's far from perfect
+# function __save_previous_command -v _
+#   [ "$_" != 'fish' ] ; and set -g __ $_
+# end
+
+
+
 function fish_prompt
   set -l last_status $status
   set -l segments (math $COLUMNS/20)
@@ -182,7 +224,7 @@ function fish_prompt
   # TODO Find a way to skip duration for interactive commands
   [ $last_status -ne 0 ] ; and __shish_print_in $orange[2] "╰→ $last_status "
   set -l duration (math $CMD_DURATION/1000)
-  [ $duration -gt 0 ] ; and __shish_print_in $blue[2] "⟳  $duration seconds"
+  [ "$duration" -gt 0 ] ; and __shish_print_in $blue[2] "⟳  $duration seconds"
   echo
 
   # Are we in a git repository?
