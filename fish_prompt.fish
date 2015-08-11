@@ -175,11 +175,14 @@ set shish_fg_detached $purple[3]
 
 function fish_prompt
   set -l last_status $status
-  echo " >> $history[1]"
   set -l segments (math $COLUMNS/20)
   set __shish_bg_current 'unstarted'
 
-  [ $last_status -ne 0 ] ; and __shish_print_in $orange[2] "╰→ $last_status"
+  # Show return status and duration of last command (if long)
+  # TODO Find a way to skip duration for interactive commands
+  [ $last_status -ne 0 ] ; and __shish_print_in $orange[2] "╰→ $last_status "
+  set -l duration (math $CMD_DURATION/1000)
+  [ $duration -gt 0 ] ; and __shish_print_in $blue[2] "⟳  $duration seconds"
   echo
 
   # Are we in a git repository?
