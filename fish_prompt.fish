@@ -223,8 +223,8 @@ function fish_prompt
   # Show return status and duration of last command (if long)
   # TODO Find a way to skip duration for interactive commands
   [ $last_status -ne 0 ] ; and __shish_print_in $orange[2] "╰→ $last_status "
-  set -l duration (math $CMD_DURATION/1000)
-  [ "$duration" -gt 0 ] ; and __shish_print_in $blue[2] "⟳  $duration seconds"
+  set -l duration (echo -e "scale=1 \n 2626/1000" | bc)
+  [ "$CMD_DURATION" -gt 1000 ] ; and __shish_print_in $blue[2] "⟳  $duration seconds"
   echo
 
   # Are we in a git repository?
@@ -234,6 +234,7 @@ function fish_prompt
     # components : outside / branch / root / inside
     set -l remaining_length (math $segments-2) # segments after branch & root
     set -l inside (echo "$PWD" | sed -e "s#$git_root##g" -e 's#^/##' | tr / \n)
+    [ -z "$inside" ] ; and set -e inside
     set -l outside_length (math $remaining_length-(count $inside))
 
     set -l outside (echo (_shish_pretty_dir $git_root) | tr / \n)
