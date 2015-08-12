@@ -223,7 +223,7 @@ function fish_prompt
   # Show return status and duration of last command (if long)
   # TODO Find a way to skip duration for interactive commands
   [ $last_status -ne 0 ] ; and __shish_print_in $orange[2] "╰→ $last_status "
-  set -l duration (echo -e "scale=1 \n $CMD_DURATION/1000" | bc)
+  [ -n "$CMD_DURATION" ] ; and set -l duration (echo -e "scale=1 \n $CMD_DURATION/1000" | bc)
   [ "$CMD_DURATION" -gt 1000 ] ; and __shish_print_in $blue[2] "⟳  $duration seconds"
   echo
 
