@@ -222,9 +222,10 @@ function fish_prompt
 
   # Show return status and duration of last command (if long)
   # TODO Find a way to skip duration for interactive commands
+  # NOTE Apparently the contents of the CMD_DURATION variable changed between
+  # verisons of fish, and now it's already formatted nicely in a duration
   [ $last_status -ne 0 ] ; and __shish_print_in $orange[2] "╰→ $last_status "
-  [ -n "$CMD_DURATION" ] ; and set -l duration (echo -e "scale=1 \n $CMD_DURATION/1000" | bc)
-  [ "$CMD_DURATION" -gt 1000 ] ; and __shish_print_in $blue[2] "⟳  $duration seconds"
+  [ -n "$CMD_DURATION" ] ; and __shish_print_in $blue[2] "⟳  $CMD_DURATION"
   echo
 
   # Are we in a git repository?
