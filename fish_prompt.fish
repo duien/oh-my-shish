@@ -299,14 +299,27 @@ function fish_prompt
 
       # We have room for all the segments
       if [ $inside_length -ge $inside_count ]
-        __shish_segment soft right $shish_status_color[2]
-        __shish_print_list_in $shish_status_color[1] (__shish_segment soft right $shish_status_color[2]) $inside
+        # __shish_segment soft right $shish_status_color[2]
+        # __shish_print_list_in $shish_status_color[1] (__shish_segment soft right $shish_status_color[2]) $inside
+
+        __shish_segment hard right $shish_status_color[2]
+        __shish_print_list_in $grayscale[-3] (__shish_segment soft right $shish_status_color[3]) $inside
+
+
+
+      # Only show some segments
       else
         set inside_length (math $inside_length+1)
         [ $inside_length -eq 1 ] ; and set inside_length 2
         set -l visible_inside (_shish_limit_to $inside_length $inside)
-        __shish_print_in $shish_status_color[2] ' ⋯  '
-        __shish_print_list_in $shish_status_color[1] (__shish_segment soft right $shish_status_color[2]) $visible_inside[2..-1]
+
+
+        __shish_segment hard right $shish_status_color[2]
+        __shish_print_in $shish_status_color[3] '⋯  '
+        __shish_print_list_in $grayscale[-3] (__shish_segment soft right $shish_status_color[3]) $visible_inside[2..-1]
+        
+        # __shish_print_in $shish_status_color[2] ' ⋯  '
+        # __shish_print_list_in $shish_status_color[1] (__shish_segment soft right $shish_status_color[2]) $visible_inside[2..-1]
       end
     end
 
