@@ -156,6 +156,40 @@ function _shish_pretty_dir -a directory -d "Current directory, with home turned 
   echo $directory | sed -e "s|^$HOME|~|" -e 's|^/private||' -e 's|^/||'
 end
 
+function _shish_ruby
+  set -l actual_ruby_version (ruby -v | cut -f 2 -d ' ' | cut -f 1 -d 'p')
+  if which rbenv | grep 'rbenv' > /dev/null
+    # TODO For some stupid reason, `rbenv shell` works differently than
+    # all the other commands and puts output somewhere that still shows
+    # up even with STDOUT and STDERR redirected
+
+    rbenv local ^ /dev/null > /dev/null; and echo -n 'l'
+    rbenv global ^ /dev/null > /dev/null; and echo -n 'g'
+
+
+    # # Check for local ruby version
+    # set -l ruby_version (rbenv local ^ /dev/null)
+    # if [ -n "$ruby_version" ]
+    #   echo -n "⟡ $ruby_version"
+    #   return
+    # end
+
+    # Check for global ruby version
+    # set -l ruby_version (rbenv global ^ /dev/null)
+    # if [ -n "$ruby_version" ]
+    #   echo -n "∗ $ruby_version"
+    #   return
+    # end
+
+    # Huh, that's weird
+    # set -l ruby_version (rbenv version ^ /dev/null)
+    # echo -n \? ($ruby_version | cut -f 1 -d ' ')
+
+  else
+    echo -n (ruby -v | cut -f 2 -d ' ' | cut -f 1 -d 'p') # ruby version
+  end
+end
+
 # Prompt color setup
 set shish_bg_pwd $grayscale[4]
 set shish_fg_pwd $grayscale[7]
@@ -227,6 +261,11 @@ function fish_prompt
   [ $last_status -ne 0 ] ; and __shish_print_in $orange[2] "╰→ $last_status "
   [ -n "$CMD_DURATION" ] ; and __shish_print_in $blue[2] "⟳  $CMD_DURATION"
   echo
+
+
+  # Ruby version (hacky)
+  # __shish_segment hard right $red[3]
+  # __shish_print_in $red[1] (_shish_ruby)
 
   # Are we in a git repository?
   set -l git_root (_shish_git root)
