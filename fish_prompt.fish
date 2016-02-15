@@ -247,19 +247,31 @@ set shish_fg_detached $purple[3]
 #   [ "$_" != 'fish' ] ; and set -g __ $_
 # end
 
-
+set shish_error_symbol "⚡︎" # "╰→"
+set shish_duration_symbol "Δ" # "⟳ "
 
 function fish_prompt
   set -l last_status $status
   set -l segments (math $COLUMNS/20)
   set __shish_bg_current 'unstarted'
 
-  # Show return status and duration of last command (if long)
+  # Show return status of last command if non-zero
+  [ $last_status -ne 0 ] ; and __shish_print_in $orange[2] "$shish_error_symbol $last_status "
+
+  # Show the duration of the last command
+  # NOTE There's some variation in the contents of the CMD_DURATION variable. In
+  # slightly older versions of fish, it's preformatted number of seconds, and in
+  # newer versions it's a raw millisecond value
   # TODO Find a way to skip duration for interactive commands
-  # NOTE Apparently the contents of the CMD_DURATION variable changed between
-  # verisons of fish, and now it's already formatted nicely in a duration
-  [ $last_status -ne 0 ] ; and __shish_print_in $orange[2] "╰→ $last_status "
-  [ -n "$CMD_DURATION" ] ; and __shish_print_in $blue[2] "⟳  $CMD_DURATION"
+  if [ -n "$CMD_DURATION" ]
+    # For numeric duration
+    if [ "$CMD_DURATION" -eq "$CMD_DURATION" ]
+      # Print if over 5 seconds
+      [ "$CMD_DURATION" -gt 5000 ] ; and __shish_print_in $blue[2] "$shish_duration_symbol $CMD_DURATION ms"
+    else
+      __shish_print_in $blue[2] "$shish_duration_symbol $CMD_DURATION"
+    end
+  end
   echo
 
 
